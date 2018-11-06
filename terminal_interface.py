@@ -12,7 +12,7 @@ from NodeMapper import NodeMapper
  
 
 
-## really simple interface for user to change the mapping
+## really simple interface for user to interact with
 
 
 if __name__ == "__main__":

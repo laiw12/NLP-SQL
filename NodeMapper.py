@@ -9,6 +9,7 @@ Created on Mon Nov  5 13:56:06 2018
 
 import nltk
 from  WordNetScore import WordNetScore
+from tools import helpertools
 
 ## the class that maps each word 
 
@@ -58,7 +59,7 @@ class NodeMapper:
         # tokenized = nltk.word_tokenize(lines)
         nouns = [word for (word, pos) in nltk.pos_tag(wordlist) if is_noun(pos)]
         return nouns
-        
+    
         
     
     
@@ -138,17 +139,20 @@ class NodeMapper:
                 
             ## -------- value node ---------# 
             
-            if type(wordlist[i]) == int or type(wordlist[i]) == float:
-                 res.append((wordlist[i],"VN",wordlist[i]))
-                 mapped_node.append(wordlist[i])
+            if helpertools.intTryParse(wordlist[i])[1]:
+                res.append((wordlist[i],"VN",wordlist[i]))
+                mapped_node.append(wordlist[i])
                 
-            
+       
         return (res,mapped_node)
-
-
-
-
     
+    
+    
+    
+    '''
+    function that takes input as sentence in String format
+    Returns the final mapping result. 
+    '''
     def get_final_map(sentence):
         parse_sentence = sentence.split(" ")
         keyword_map = NodeMapper.map_node_by_keyword(parse_sentence)
@@ -156,6 +160,7 @@ class NodeMapper:
         mapped_index = keyword_map[1]
         
         for i in range(len(mapped_index)):
+         
             parse_sentence.remove(mapped_index[i])
         
         without_noun = NodeMapper.filter_nouns(parse_sentence)
@@ -172,15 +177,7 @@ class NodeMapper:
         
         
         
-            
-       
-            
-        
-        
-        
     
-    
-
     
     
     
@@ -193,7 +190,7 @@ if __name__ == "__main__":
     #print(NodeMapper.map_node_by_wup_score(nouns,schema))
     
     
-    sentence = "get the authors whose name is BOB age is greater than 38" 
+    sentence = "get the authors whose name is BOB and age is greater than 38" 
     print("input sentence: ", sentence)
     print("map results: ", NodeMapper.get_final_map(sentence))
     

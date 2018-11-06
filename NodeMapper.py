@@ -14,9 +14,6 @@ from  WordNetScore import WordNetScore
 
 
 class NodeMapper:
-    
-    
-    
     """
     Function that maps the sentence words to SQL components accroding to WUP_similarity score"
     
@@ -25,7 +22,16 @@ class NodeMapper:
         eg:['GET','authors','who','published','in','database','area']
         schema: LIST[String] (list of words that is parsed by the original database schema)
         
+    return format: 
+        Array[(word,schema)]
+        
     """
+    
+    
+    DB_Attributes = ["author","age","publication","gender"]
+    
+    
+    
     def map_node_by_wup_score(wordlist,schema): 
         map_result = []
         for i in range(len(wordlist)):
@@ -38,29 +44,165 @@ class NodeMapper:
         return map_result
     
     
+    """
+    Function that input a sentence and returns an array of nouns in that sentence 
+    input format:
+        wordlist: Array[string]
     
+    output format：
+        Array[String]
     
-    
-    def filter_nouns(lines):
+    """
+    def filter_nouns(wordlist):
         is_noun = lambda pos: pos[:2] == 'NN'
-        tokenized = nltk.word_tokenize(lines)
-        nouns = [word for (word, pos) in nltk.pos_tag(tokenized) if is_noun(pos)]
+        # tokenized = nltk.word_tokenize(lines)
+        nouns = [word for (word, pos) in nltk.pos_tag(wordlist) if is_noun(pos)]
         return nouns
         
         
+    
+    
+    """
+    Function that maps the word by keyword in convention
+    Input:  array[string]
+    Output: (word, node tpye, sql translation)
+    
+    """
+    
+    def map_node_by_keyword(wordlist):
+        
+        mapped_node = []
+        res = []
+        for i in range(len(wordlist)):
+        
+            ## ----   selection node ------
+            if wordlist[i] == "return" or wordlist[i] == "find" or wordlist[i] == "get":
+                res.append((wordlist[i],"SN","SELECT"))  
+                mapped_node.append(wordlist[i])
+            
+            # ------  Operator Node ------
+            if wordlist[i] =="equals" or wordlist[i] == "equal":
+                 res.append((wordlist[i],"ON","="))
+                 mapped_node.append(wordlist[i])
+            if wordlist[i] == "less":
+                res.append((wordlist[i],"ON","<"))
+                mapped_node.append(wordlist[i])
+            if wordlist[i] =="greater":
+                 res.append((wordlist[i],"ON",">"))
+                 mapped_node.append(wordlist[i])
+            if wordlist[i] =="not":
+                 res.append((wordlist[i],"ON","!="))
+                 mapped_node.append(wordlist[i])
+            if wordlist[i] =="before":
+                 res.append((wordlist[i],"ON","<"))
+                 mapped_node.append(wordlist[i])
+            if wordlist[i] =="after":
+                 res.append((wordlist[i],"ON",">"))
+                 mapped_node.append(wordlist[i])
+            if wordlist[i] =="more":
+                 res.append((wordlist[i],"ON",">"))
+                 mapped_node.append(wordlist[i])
+            if wordlist[i] =="older":
+                 res.append((wordlist[i],"ON",">"))
+                 mapped_node.append(wordlist[i])
+            if wordlist[i] =="newer":
+                 res.append((wordlist[i],"ON","<"))
+                 mapped_node.append(wordlist[i])
+            
+            #-------- function node ---------#
+            
+            if wordlist[i] == "average":
+                res.append((wordlist[i],"FN","AVG"))
+                mapped_node.append(wordlist[i])
+            
+            if wordlist[i] == "most":
+                res.append((wordlist[i],"FN","MAX"))
+                mapped_node.append(wordlist[i])
+            
+            if wordlist[i] == "total":
+                res.append((wordlist[i],"FN","SUM")) 
+                mapped_node.append(wordlist[i])
+            
+            if wordlist[i] == "number":
+                res.append((wordlist[i],"FN","COUNT"))
+                mapped_node.append(wordlist[i])
+            
+            # -------- logic node ------------#
+            
+            if wordlist[i] == "and":
+                res.append((wordlist[i],"LN","AND"))
+                mapped_node.append(wordlist[i])
+            if wordlist[i] == "or":
+                res.append((wordlist[i],"LN","OR"))
+                mapped_node.append(wordlist[i])
+                
+            ## -------- value node ---------# 
+            
+            if type(wordlist[i]) == int or type(wordlist[i]) == float:
+                 res.append((wordlist[i],"VN",wordlist[i]))
+                 mapped_node.append(wordlist[i])
+                
+            
+        return (res,mapped_node)
+
+
+
+
+    
+    def get_final_map(sentence):
+        parse_sentence = sentence.split(" ")
+        keyword_map = NodeMapper.map_node_by_keyword(parse_sentence)
+        keyword_map_result = keyword_map[0]
+        mapped_index = keyword_map[1]
+        
+        for i in range(len(mapped_index)):
+            parse_sentence.remove(mapped_index[i])
+        
+        without_noun = NodeMapper.filter_nouns(parse_sentence)
+        similarity_map = NodeMapper.map_node_by_wup_score(without_noun,NodeMapper.DB_Attributes)
+       
+        
+        ## process the format:
+        similarity_result = []
+        for i in range(len(similarity_map)):
+            item = (similarity_map[i][0],"NN",similarity_map[i][1])
+            similarity_result.append(item)
+            
+        return similarity_result + keyword_map_result
+        
+        
+        
+            
+       
+            
+        
+        
         
     
     
-    
-    
-            
 
+    
+    
+    
+              
 if __name__ == "__main__":
-    sentence  = "Get authors whose name is BOB and published in database area" 
-    nouns = NodeMapper.filter_nouns(sentence)
-    print()
-    schema = ['author','area']
-    print(NodeMapper.map_node_by_wup_score(nouns,schema))
+    #sentence  = ['Get','authors','whose','name','is','BOB','and','published','in','database','area']
+    #sentence1 = "Get authors whose name is BOB and published in database area"
+    #nouns = NodeMapper.filter_nouns(sentence)
+    #schema = ['author','area']
+    #print(NodeMapper.map_node_by_wup_score(nouns,schema))
+    
+    
+    sentence = "get the authors whose name is BOB age is greater than 38" 
+    print("input sentence: ", sentence)
+    print("map results: ", NodeMapper.get_final_map(sentence))
+    
+    
+    
+    
+    
+    
+    
         
         
         

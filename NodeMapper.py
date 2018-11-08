@@ -29,6 +29,7 @@ class NodeMapper:
     """
     
     
+    DB_Name = "authorship"
     DB_Attributes = ["author","age","publication","gender"]
     
     
@@ -56,7 +57,6 @@ class NodeMapper:
     """
     def filter_nouns(wordlist):
         is_noun = lambda pos: pos[:2] == 'NN'
-        # tokenized = nltk.word_tokenize(lines)
         nouns = [word for (word, pos) in nltk.pos_tag(wordlist) if is_noun(pos)]
         return nouns
     
@@ -177,11 +177,7 @@ class NodeMapper:
         
         
         
-    
-    
-    
-    
-              
+        
 if __name__ == "__main__":
     #sentence  = ['Get','authors','whose','name','is','BOB','and','published','in','database','area']
     #sentence1 = "Get authors whose name is BOB and published in database area"

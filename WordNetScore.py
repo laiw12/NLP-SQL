@@ -6,6 +6,7 @@
 
 from nltk.corpus import wordnet as wn
 
+
 class WordNetScore:
     
     ## calculate the wup_similarity between two words in string using the package from nltk.corpus 

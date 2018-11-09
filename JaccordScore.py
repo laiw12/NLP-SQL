@@ -7,6 +7,12 @@ Created on Mon Nov  5 16:42:08 2018
 """
 
 
+"""
+calculate the jaccord similarity score
+
+"""
+
+
 class JaccordScore:
     
     def get_jaccordscore(word1, word2):
@@ -25,19 +31,17 @@ class JaccordScore:
         
         intersect = word1_set.intersection(word2_set)
         union = word1_set.union(word2_set)
-        print(intersect)
-        print(union)
+       
       
         score = len(intersect)/ len(union)
         
-        print(score)
+  
         
-        return score**(0.5)
+        return score*(0.5)
     
 if __name__ == "__main__":
-    word1 = '01256'
-    word2 = '023579'
-    
+    word1 = 'author'
+    word2 = 'jamse'
     print(JaccordScore.get_jaccordscore(word1,word2))
     
     

@@ -10,6 +10,7 @@ Created on Mon Nov  5 13:56:06 2018
 import nltk
 from  WordNetScore import WordNetScore
 from tools import helpertools
+from JaccordScore import JaccordScore
 
 ## the class that maps each word 
 
@@ -56,8 +57,21 @@ class NodeMapper:
     
     """
     def filter_nouns(wordlist):
-        is_noun = lambda pos: pos[:2] == 'NN'
-        nouns = [word for (word, pos) in nltk.pos_tag(wordlist) if is_noun(pos)]
+        nouns = []
+        
+        for word,pos in nltk.pos_tag(wordlist):
+            if (pos == 'NN' or pos == 'NNP' or pos == 'NNS' or pos == 'NNPS'):
+                nouns.append(word)
+        
+        #is_noun = lambda pos: pos[:2] == 'NN' or pos[:2] == 'NNP'
+        #nouns = [word for (word, pos) in nltk.pos_tag(wordlist) if is_noun(pos)]
+        
+        if 'gender' in wordlist and ('gender' not in nouns):
+            nouns.append('gender')
+            
+        if 'male' in wordlist and (' male' not in nouns):
+            nouns.append('male')
+    
         return nouns
     
         
@@ -82,7 +96,7 @@ class NodeMapper:
                 mapped_node.append(wordlist[i])
             
             # ------  Operator Node ------
-            if wordlist[i] =="equals" or wordlist[i] == "equal":
+            if wordlist[i] =="equals" or wordlist[i] == "equal" :
                  res.append((wordlist[i],"ON","="))
                  mapped_node.append(wordlist[i])
             if wordlist[i] == "less":
@@ -173,6 +187,16 @@ class NodeMapper:
             item = (similarity_map[i][0],"NN",similarity_map[i][1])
             similarity_result.append(item)
             
+        
+        ## Double check NN  not a VN:
+        
+        
+        for i in range(len(similarity_result)):
+            if similarity_result[i][1] == "NN":
+                if JaccordScore.get_jaccordscore(similarity_result[i][0],similarity_result[i][2]) < 0.13:
+                    item = (similarity_map[i][0],"VN", similarity_map[i][0])
+                    similarity_result[i] = item
+                    
         return similarity_result + keyword_map_result
         
         
@@ -185,10 +209,13 @@ if __name__ == "__main__":
     #schema = ['author','area']
     #print(NodeMapper.map_node_by_wup_score(nouns,schema))
     
+    sentence = "get the authors whose name equal to BOB or age is greater than 38"
     
-    sentence = "get the authors whose name is BOB and age is greater than 38" 
-    print("input sentence: ", sentence)
-    print("map results: ", NodeMapper.get_final_map(sentence))
+    sentence2 = "Get authors whose name equal to BOB and published in database area"
+    sentence = "Get the age of author whose name is equal to BOB and gender equals to male" 
+  #  s1 = 'get the authors whose name equal to BOB or age is greater than 38'
+ #   print("input sentence: ", sentence2)
+    print("map results: ", NodeMapper.get_final_map("Get the age of author whose name is equal to BOB and gender equals to male"))
     
     
     

@@ -36,9 +36,29 @@ class SQLgenerator:
         perm = itertools.permutations(NN_ON_VN ,3)
         for item in list(perm):
             if SQLgenerator.check_node_type(item[0],map_result) == "NN" and SQLgenerator.check_node_type(item[1],map_result) == "ON" and SQLgenerator.check_node_type(item[2],map_result) =="VN":
-                perm_NN_ON_VN.append(item)       
+                perm_NN_ON_VN.append(item)   
+        
         return perm_NN_ON_VN
             
+    """
+    connect  NN_ON_VN to generate a list of valid sql statements.
+    
+    """
+    
+    
+    
+    def connect_NN_ON_VN(perm_NN_ON_VN):
+        sql = []
+        for i in range(len(perm_NN_ON_VN)):
+            sql_string = ""
+            for j in range(len(perm_NN_ON_VN[0])):
+                sql_string += perm_NN_ON_VN[i][j] + " "
+        
+            sql.append(sql_string)
+        return sql
+    
+   
+    
     
     
     """
@@ -55,7 +75,6 @@ class SQLgenerator:
         valid = []
         key_words = [ x[2] for x in map_result ]
         n = len([x for x in map_result if x[1] == "LN"])
-        print(n)
         selection_c = 2*n
         perm = list(itertools.permutations(perm_NN_ON_VN,selection_c))
         for item in perm:
@@ -90,7 +109,7 @@ class SQLgenerator:
     """
     
     
-    
+   
     def connect_LN(valid_LN,map_result):
         sql = []    
         logic = [x[2] for x in map_result if x[1] == "LN"]
@@ -138,6 +157,7 @@ class SQLgenerator:
             score = SQLgenerator.calculate_single_score(valid_ln_string[i],map_result,sentence)
             sql_scores.append([valid_ln_string[i],score])
         
+        print(sql_scores)
         return sql_scores
             
             
@@ -197,15 +217,35 @@ class SQLgenerator:
         
         selection_NN = SQLgenerator.get_selection_NN(sentence,map_results)
         new_map_results = selection_NN[1]
+      #  print(new_map_results)
         NN_ON_VN = SQLgenerator.group_NN_ON_VN(new_map_results)
-        LN = SQLgenerator.select_valid_LN(NN_ON_VN , new_map_results)
-        connect_ln = SQLgenerator.connect_LN(LN, new_map_results)
-        score_list = SQLgenerator.assign_connect_ln_score(connect_ln, new_map_results,sentence)
-        where = SQLgenerator.get_highest_score(score_list)
+        print(NN_ON_VN)
         
-        sql = "SELECT " + selection_NN[0][2] + " FROM " + NodeMapper.DB_Name + " WHERE " + where 
+        bool_ln_mode = "LN" in [ x[1] for x in map_results ]
         
-        return sql
+        
+        # start logic operator mode 
+        
+        if bool_ln_mode:
+            LN = SQLgenerator.select_valid_LN(NN_ON_VN , new_map_results)
+            if len(LN) == 0:
+                print("Mapping selection is incorrect")
+                return
+            connect_ln = SQLgenerator.connect_LN(LN, new_map_results)
+            score_list = SQLgenerator.assign_connect_ln_score(connect_ln, new_map_results,sentence)
+            where = SQLgenerator.get_highest_score(score_list)
+            sql = "SELECT " + selection_NN[0][2] + " FROM " + NodeMapper.DB_Name + " WHERE " + where + ";"
+            return sql
+        
+        # start the mode with out logic operator
+        
+        if not bool_ln_mode:
+            sql_list = SQLgenerator.connect_NN_ON_VN(NN_ON_VN)
+            sql = "SELECT " + selection_NN[0][2] + " FROM " + NodeMapper.DB_Name + " WHERE " + sql_list[0] + ";"
+            return sql
+            
+        
+    
         
         
     """
@@ -252,16 +292,23 @@ class SQLgenerator:
 
 
 if __name__ == "__main__":
-    sentence = "get the authors whose name equal to BOB and age is greater than 38"
-    sentence2 ="get the authors whose name equal to BOB"
+    demo_sentence1 = "get the authors whose name equal to BOB or age is greater than 38"
+    demo_sentnece2= "get the age of author whose name is equal to BOB and gender equals to male" 
    
-    map_result = NodeMapper.get_final_map(sentence)
-    map_result2 = NodeMapper.get_final_map(sentence2)
-    print(map_result2)
+   
+  #  map_result = NodeMapper.get_final_map(sentence)
+   # map_result2 = NodeMapper.get_final_map(sentence2)
+  #  print(map_result)
   #  print(map_result)
    
     
-    map_result_after_user_edit = [('authors', 'NN', 'author'),('BOB', 'VN', 'BOB'), ('age', 'NN', 'age'), ('get', 'SN', 'SELECT'), ('and', 'LN', 'AND'), ('greater', 'ON', '>'), ('38', 'VN', '38'),('equal', 'ON', '=') ,('name', 'NN', 'author')]
+   
+    map3 = [('age', 'NN', 'age'), ('author', 'NN', 'author'), ('get', 'SN', 'SELECT'), ('equal', 'ON', '='),('BOB', 'VN', 'BOB')]
+    map_result_after_user_edit = [('authors', 'NN', 'author'),('BOB', 'VN', 'BOB'), ('age', 'NN', 'age'), ('get', 'SN', 'SELECT'), ('or', 'LN', 'OR'), ('greater', 'ON', '>'), ('38', 'VN', '38'),('equal', 'ON', '=') ,('name', 'NN', 'author')]
+    map_result_after_user_edit2 = [('authors', 'NN', 'author'),('BOB', 'VN', 'BOB'),  ('get', 'SN', 'SELECT'), ('equal', 'ON', '=') ,('name', 'NN', 'author')]
+    
+    
+    map_demo2 = [('age', 'NN', 'age'), ('author', 'NN', 'author'), ('BOB', 'VN', 'BOB'), ('gender', 'NN', 'gender'), ('get', 'SN', 'SELECT'), ('equal', 'ON', '='), ('and', 'LN', 'AND'), ('equals', 'ON', '=')]
     
    # a = SQLgenerator.group_NN_ON_VN(map_result_after_user_edit)
   ##  print("group NN ON VN: ",a)
@@ -283,14 +330,15 @@ if __name__ == "__main__":
     #print(g)
     
     
-    print(SQLgenerator.generate_final_sql(sentence,map_result_after_user_edit))
+   # print(SQLgenerator.generate_final_sql(sentence3,map3))
  
   #  print(SQLgenerator.get_selection_NN(sentence, map_result_after_user_edit))
     
     
     
     
-  #  a = SQLgenerator.check_node_type('BOB', map_result_after_user_edit)
+    a = SQLgenerator.generate_final_sql(demo_sentnece2,map_demo2)
+   # print(a)
  #   print(a)
   
     

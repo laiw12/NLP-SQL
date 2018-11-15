@@ -31,7 +31,7 @@ class NodeMapper:
     
     
     DB_Name = "authorship"
-    DB_Attributes = ["author","age","publication","gender"]
+    DB_Attributes = ["author","age","publication","gender","field"]
     
     
     
@@ -71,6 +71,7 @@ class NodeMapper:
             
         if 'male' in wordlist and (' male' not in nouns):
             nouns.append('male')
+      
     
         return nouns
     
@@ -85,7 +86,7 @@ class NodeMapper:
     """
     
     def map_node_by_keyword(wordlist):
-        
+       
         mapped_node = []
         res = []
         for i in range(len(wordlist)):
@@ -97,8 +98,9 @@ class NodeMapper:
             
             # ------  Operator Node ------
             if wordlist[i] =="equals" or wordlist[i] == "equal" :
-                 res.append((wordlist[i],"ON","="))
-                 mapped_node.append(wordlist[i])
+            
+                res.append((wordlist[i],"ON","="))
+                mapped_node.append(wordlist[i])
             if wordlist[i] == "less":
                 res.append((wordlist[i],"ON","<"))
                 mapped_node.append(wordlist[i])
@@ -213,9 +215,13 @@ if __name__ == "__main__":
     
     sentence2 = "Get authors whose name equal to BOB and published in database area"
     sentence = "Get the age of author whose name is equal to BOB and gender equals to male" 
+    
+    
+    
+    sentence4 ="Get the average age of author whose gender equals to male"
   #  s1 = 'get the authors whose name equal to BOB or age is greater than 38'
  #   print("input sentence: ", sentence2)
-    print("map results: ", NodeMapper.get_final_map("Get the age of author whose name is equal to BOB and gender equals to male"))
+    print("map results: ", NodeMapper.get_final_map(sentence))
     
     
     

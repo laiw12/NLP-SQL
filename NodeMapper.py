@@ -199,7 +199,87 @@ class NodeMapper:
                     item = (similarity_map[i][0],"VN", similarity_map[i][0])
                     similarity_result[i] = item
                     
-        return similarity_result + keyword_map_result
+        fix_order = NodeMapper.preserve_orginal_order_mapping(sentence,similarity_result + keyword_map_result)
+                    
+        return fix_order
+    
+    
+    
+    def preserve_orginal_order_mapping(sentence,final_map_result):
+        
+        
+        orginal_order_index = []
+        sentence_split = sentence.split(" ")
+        orginal_order_map = [0 for x in range(len(sentence_split))]
+        for i in range(len(final_map_result)):
+            orginal_order_index.append(sentence_split.index(final_map_result[i][0]))
+
+        for i in range(len(final_map_result)):
+             orginal_order_map[orginal_order_index[i]] = final_map_result[i]
+        
+        final_result = [x for x in orginal_order_map if x !=0]
+    
+        return final_result 
+    
+    
+    
+    def preserve_orginal_order_mapping2(sentence,final_map_result):
+        orginal_order_index = []
+        sentence_split = sentence.split(" ")
+        orginal_order_map = [0 for x in range(len(sentence_split))]
+        for i in range(len(final_map_result)):
+            orginal_order_index.append(sentence_split.index(final_map_result[i][0]))
+
+        for i in range(len(final_map_result)):
+             orginal_order_map[orginal_order_index[i]] = final_map_result[i]
+        
+        for i in range(len(sentence_split)):
+            if  orginal_order_map[i] == 0:
+                orginal_order_map[i] = (sentence_split[i],None,None)
+        
+        return orginal_order_map
+        
+        
+             
+            
+    
+    def display_mapping(sentence):
+        parse_sentence = sentence.split(" ")
+        keyword_map = NodeMapper.map_node_by_keyword(parse_sentence)
+        keyword_map_result = keyword_map[0]
+        mapped_index = keyword_map[1]
+        
+        for i in range(len(mapped_index)):
+         
+            parse_sentence.remove(mapped_index[i])
+        
+        without_noun = NodeMapper.filter_nouns(parse_sentence)
+        similarity_map = NodeMapper.map_node_by_wup_score(without_noun,NodeMapper.DB_Attributes)
+       
+        
+        ## process the format:
+        similarity_result = []
+        for i in range(len(similarity_map)):
+            item = (similarity_map[i][0],"NN",similarity_map[i][1])
+            similarity_result.append(item)
+            
+        
+        ## Double check NN  not a VN:
+        
+        
+        for i in range(len(similarity_result)):
+            if similarity_result[i][1] == "NN":
+                if JaccordScore.get_jaccordscore(similarity_result[i][0],similarity_result[i][2]) < 0.13:
+                    item = (similarity_map[i][0],"VN", similarity_map[i][0])
+                    similarity_result[i] = item
+                    
+        fix_order = NodeMapper.preserve_orginal_order_mapping2(sentence,similarity_result + keyword_map_result)
+        
+        return fix_order
+        
+    
+    
+    
         
         
         
@@ -214,7 +294,6 @@ if __name__ == "__main__":
     sentence = "get the authors whose name equal to BOB or age is greater than 38"
     
     sentence2 = "Get authors whose name equal to BOB and published in database area"
-    sentence = "Get the age of author whose name is equal to BOB and gender equals to male" 
     
     
     
@@ -222,8 +301,9 @@ if __name__ == "__main__":
   #  s1 = 'get the authors whose name equal to BOB or age is greater than 38'
  #   print("input sentence: ", sentence2)
     print("map results: ", NodeMapper.get_final_map(sentence))
-    
-    
+    b = NodeMapper.get_final_map(sentence)
+    d = NodeMapper.display_mapping(sentence)
+    print(d)
     
     
     

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>natural language query</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+<!--===============================================================================================-->	
+	<link rel="icon" type="image/png" href="/static/images/icons/favicon.ico"/>
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/vendor/bootstrap/css/bootstrap.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/fonts/iconic/css/material-design-iconic-font.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/vendor/animate/animate.css">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="/static/vendor/css-hamburgers/hamburgers.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/vendor/animsition/css/animsition.min.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/vendor/select2/select2.min.css">
+<!--===============================================================================================-->	
+	<link rel="stylesheet" type="text/css" href="/static/vendor/daterangepicker/daterangepicker.css">
+<!--===============================================================================================-->
+	<link rel="stylesheet" type="text/css" href="/static/css/util.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/main.css">
+<!--===============================================================================================-->
+</head>
+<body>
+	
+    <div class="limiter">
+		<div class="container-login100" style="background-image: url('/static/images/bg-01.jpg');">
+			<div class="wrap-login100 p-l-55 p-r-55 p-t-65 p-b-54">
+				<form class="login100-form validate-form" action="/display" method="POST">
+
+					<span class="login100-form-title p-b-49">Preview</span>
+					<table style="width: 100%;">
+						<thead>
+							<tr>
+								<th>Original</th>
+								<th>Type</th>
+								<th>Key Word</th>
+							</tr>
+						</thead>
+						<body>
+							{% for item in displays %}
+								<tr>
+									{% for ele in item %}
+										<td>{{ele}}</td>
+									{% endfor %}
+								</tr>
+							{% endfor %}
+						</body>
+					</table>
+
+					<br>
+
+					<div class="wrap-input100 m-b-23">
+                        <input type="submit" value="RELOAD PREVIEW" formaction="/remapping">
+                    </div>
+					
+					<span class="login100-form-title p-b-49">Mapping Result</span> 
+                    <div id="items">
+                        <ul>
+                            {% for res in mapping_results %}
+                              <li>
+                                <div class="wrap-input100 validate-input m-b-23" data-validate = "input is reauired">
+									<input class="input100" type="text" name="node_val" value={{res.node_val}}>
+									<input class="input100" type="text" name="node_type" value={{res.node_type}} placeholder="Enter modified node type">
+									<input class="input100" type="text" name="node_sql" value={{res.node_sql}} placeholder="Enter modified word in SQL">
+                                    <input type="button" value="delete" id="delete">
+                                </div>
+                              </li>
+							{% endfor %}
+						</ul>
+						<input class="input100" type="hidden" name="NL_query" value="{{NL_query}}">
+                    </div>
+                    
+                    <div class="container-login100-form-btn">
+						<div class="wrap-login100-form-btn">
+							<div class="login100-form-bgbtn"></div>
+							<button class="login100-form-btn" type="button" id="add">
+								Add Node
+                            </button>
+						</div>
+					</div>
+					
+					<br>
+
+					<div class="container-login100-form-btn">
+						<div class="wrap-login100-form-btn">
+							<div class="login100-form-bgbtn"></div>
+							<button class="login100-form-btn" type="submit">
+								Confirm
+							</button>
+						</div>
+					</div>
+
+				</form>
+			</div>
+		</div>
+	</div>
+	
+
+	<div id="dropDownSelect1"></div>
+	
+<!--===============================================================================================-->
+	<script src="/static/vendor/jquery/jquery-3.2.1.min.js"></script>
+<!--===============================================================================================-->
+	<script src="/static/vendor/animsition/js/animsition.min.js"></script>
+<!--===============================================================================================-->
+	<script src="/static/vendor/bootstrap/js/popper.js"></script>
+	<script src="/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+	<script src="/static/vendor/select2/select2.min.js"></script>
+<!--===============================================================================================-->
+	<script src="/static/vendor/daterangepicker/moment.min.js"></script>
+	<script src="/static/vendor/daterangepicker/daterangepicker.js"></script>
+<!--===============================================================================================-->
+	<script src="/static/vendor/countdowntime/countdowntime.js"></script>
+<!--===============================================================================================-->
+    <script src="/static/js/main.js"></script>
+<!--===============================================================================================-->
+    <script src="/static/js/form.js"></script>
+
+</body>
+</html>

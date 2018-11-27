@@ -205,6 +205,38 @@ class SQLgenerator:
                     
     
     
+    """
+    score function: evaluating an SQL statements by calculating the distance of  a and and b in "a ON b"
+    
+    """
+    
+    
+    def calculate_distance_score(ln_sql,map_results,sentence):
+        dic ={}
+        
+        for i in range(len(map_results)):
+            dic[map_results[i][2]] = map_results[i][0]
+        ln_sql_split = ln_sql.split(' ')
+        ln_sql_split =ln_sql_split[:-1]
+        sentence = sentence.split(" ")
+        
+        score = abs(sentence.index(ln_sql_split[0]) - sentence.index(ln_sql_split[2]))
+        
+        return score
+    
+    
+    def assign_distance_score(valid_ln_string, map_result, sentence):
+        sql_scores = []
+        
+        for i in range(len(valid_ln_string)):
+            score = SQLgenerator.calculate_distance_score(valid_ln_string[i],map_result,sentence)
+            sql_scores.append([valid_ln_string[i],score])
+        
+        return sql_scores
+            
+            
+        
+    
     
     
     """
@@ -222,10 +254,38 @@ class SQLgenerator:
         print(NN_ON_VN)
         
         bool_ln_mode = "LN" in [ x[1] for x in map_results ]
+        aggregate_mode = "FN" in [ x[1] for x in map_results ]
         
         
-        # start logic operator mode 
+        #aggregate_mode
+        if aggregate_mode:
+            if not bool_ln_mode:
+
+                aggregate_notation = [  x[2] for x in map_results if x[1] == 'FN' ]
+                component = aggregate_notation[0] + "(" +  selection_NN[0][2] + ")"
+                sql_list = SQLgenerator.connect_NN_ON_VN(NN_ON_VN)
+                score_list = SQLgenerator.assign_distance_score(sql_list,new_map_results,sentence)  
+                where = SQLgenerator.get_lowest_score(score_list)
+                sql = "SELECT " + component + " FROM " + NodeMapper.DB_Name + " WHERE " + where + ";"
+                return sql
+            
+            
+            if bool_ln_mode:
+                LN = SQLgenerator.select_valid_LN(NN_ON_VN , new_map_results)
+                if len(LN) == 0:
+                    print("Mapping selection is incorrect")
+                    return
+                connect_ln = SQLgenerator.connect_LN(LN, new_map_results)
+                score_list = SQLgenerator.assign_connect_ln_score(connect_ln, new_map_results,sentence)
+                where = SQLgenerator.get_highest_score(score_list)
+                aggregate_notation = [  x[2] for x in map_results if x[1] == 'FN' ]
+                component = aggregate_notation[0] + "(" +  selection_NN[0][2] + ")"
+                sql = "SELECT " + component + " FROM " + NodeMapper.DB_Name + " WHERE " + where + ";"
+                return sql
+                
         
+            
+          # start logic operator mode
         if bool_ln_mode:
             LN = SQLgenerator.select_valid_LN(NN_ON_VN , new_map_results)
             if len(LN) == 0:
@@ -237,7 +297,7 @@ class SQLgenerator:
             sql = "SELECT " + selection_NN[0][2] + " FROM " + NodeMapper.DB_Name + " WHERE " + where + ";"
             return sql
         
-        # start the mode with out logic operator
+        # start the mode without logic operator
         
         if not bool_ln_mode:
             sql_list = SQLgenerator.connect_NN_ON_VN(NN_ON_VN)
@@ -273,7 +333,7 @@ class SQLgenerator:
                  
                 
     """
-    helper function to Decide the highest score for a score list of NN ON VN) LN (NN ON VN)
+    helper function to Decide the highest order score for a score list of NN ON VN) LN (NN ON VN)
     
     """
                 
@@ -287,6 +347,20 @@ class SQLgenerator:
                 node = score_list[i][0]
         
         return node
+    
+    '''
+    helper function to decide the lowest distance score
+    '''
+    def get_lowest_score(score_list):
+        score = 99999
+        node = []
+        for i in range(len(score_list)):
+            if score_list[i][1] < score:
+                score = score_list[i][1]
+                node = score_list[i][0]
+        
+        return node
+    
                 
             
 
@@ -304,40 +378,60 @@ if __name__ == "__main__":
     
    
     map3 = [('age', 'NN', 'age'), ('author', 'NN', 'author'), ('get', 'SN', 'SELECT'), ('equal', 'ON', '='),('BOB', 'VN', 'BOB')]
-    map_result_after_user_edit = [('authors', 'NN', 'author'),('BOB', 'VN', 'BOB'), ('age', 'NN', 'age'), ('get', 'SN', 'SELECT'), ('or', 'LN', 'OR'), ('greater', 'ON', '>'), ('38', 'VN', '38'),('equal', 'ON', '=') ,('name', 'NN', 'author')]
-    map_result_after_user_edit2 = [('authors', 'NN', 'author'),('BOB', 'VN', 'BOB'),  ('get', 'SN', 'SELECT'), ('equal', 'ON', '=') ,('name', 'NN', 'author')]
-    
-    
+    map_result_after_user_edit = [('authors', 'NN', 'author'),('BOB', 'VN', 'BOB'), ('age', 'NN', 'age'), ('get', 'SN', 'SELECT'), ('or', 'LN', 'OR'), ('greater', 'ON', '>'), ('38', 'VN', '38'),('equal', 'ON', '=') ,('name', 'NN', 'author'),('average','FN','AVG')]
+    map_result_after_user_edit2 = [('authors', 'NN', 'author'),('BOB', 'VN', 'BOB'),  ('get', 'SN', 'SELECT'), ('equal', 'ON', '=') ,('name', 'NN', 'author')]   
     map_demo2 = [('age', 'NN', 'age'), ('author', 'NN', 'author'), ('BOB', 'VN', 'BOB'), ('gender', 'NN', 'gender'), ('get', 'SN', 'SELECT'), ('equal', 'ON', '='), ('and', 'LN', 'AND'), ('equals', 'ON', '=')]
+  
+  
     
-   # a = SQLgenerator.group_NN_ON_VN(map_result_after_user_edit)
-  ##  print("group NN ON VN: ",a)
-    
-    #b = SQLgenerator.select_valid_LN(a, map_result_after_user_edit)
-    
-    
-    #c = SQLgenerator.connect_LN(b,map_result_after_user_edit)
-    #print(c)
-    #sql = 'age > BOB AND author = 38 '
-    #sq2 = 'author = BOB AND age > 38 '
-    #d = SQLgenerator.calculate_single_score(sq2,map_result_after_user_edit,sentence)
-    #print(d)
-    
-    #perm = permutations(map_result_after_user_edit)
-    
-    
-   # g = SQLgenerator.assign_connect_ln_score(c,map_result_after_user_edit,sentence)
-    #print(g)
-    
-    
-   # print(SQLgenerator.generate_final_sql(sentence3,map3))
- 
-  #  print(SQLgenerator.get_selection_NN(sentence, map_result_after_user_edit))
+    '''                 ln_operator_mode DEMO                       '''
+    print("ln_operator_mode Demon: ")
+    ln_operator_sentence = "get the authors whose name equals to BOB or age is greater than 38"
+    print("input sentence :",ln_operator_sentence)
+    ln_map_result = NodeMapper.get_final_map(ln_operator_sentence)
+    print("---------------result_after_mapping----------------------- ")
+    print(ln_map_result)
+    print("---------------result_after_user_edit----------------------")
+    ln_map_after_user_edit = [('authors', 'NN', 'author'),('BOB', 'VN', 'BOB'), ('age', 'NN', 'age'), ('get', 'SN', 'SELECT'), ('or', 'LN', 'OR'), ('greater', 'ON', '>'), ('38', 'VN', '38'),('equals', 'ON', '=') ,('name', 'NN', 'author')]
+    print(ln_map_after_user_edit)
+    print("---------------Final SQL-----------------------------------")
+    print(SQLgenerator.generate_final_sql(ln_operator_sentence, ln_map_after_user_edit))
     
     
     
+    print()
+    print()
+    print()
     
-    a = SQLgenerator.generate_final_sql(demo_sentnece2,map_demo2)
+        
+    '''                  aggregate_mode  DEMO                   ''' 
+    print("aggregate_mode DEMO: ")
+    aggregate_sentence = "get the average age of author whose gender equals to male"
+    print("input sentence :", aggregate_sentence)
+    aggregate_map_result = NodeMapper.get_final_map(aggregate_sentence)
+    print("---------------result_after_mapping----------------------- ")
+    print(aggregate_map_result)
+    print("---------------Final SQL-----------------------------------")
+    print(SQLgenerator.generate_final_sql(aggregate_sentence, aggregate_map_result))
+  
+    
+    
+    
+    
+    #a = "author = male "
+    #b = "gender = male "
+    #m = SQLgenerator.calculate_distance_score(a,aggregate_map_result,aggregate_sentence)
+    #print(m)
+    
+    
+    
+  
+  
+    
+    
+    
+#    a = SQLgenerator.generate_final_sql( demo_sentence1, map_result_after_user_edit)
+ #   print(a)
    # print(a)
  #   print(a)
   

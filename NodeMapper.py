@@ -31,7 +31,7 @@ class NodeMapper:
     
     
     DB_Name = "authorship"
-    DB_Attributes = ["author","age","publication","gender"]
+    DB_Attributes = ["author","age","publication","gender","field"]
     
     
     
@@ -71,6 +71,7 @@ class NodeMapper:
             
         if 'male' in wordlist and (' male' not in nouns):
             nouns.append('male')
+      
     
         return nouns
     
@@ -85,7 +86,7 @@ class NodeMapper:
     """
     
     def map_node_by_keyword(wordlist):
-        
+       
         mapped_node = []
         res = []
         for i in range(len(wordlist)):
@@ -97,8 +98,9 @@ class NodeMapper:
             
             # ------  Operator Node ------
             if wordlist[i] =="equals" or wordlist[i] == "equal" :
-                 res.append((wordlist[i],"ON","="))
-                 mapped_node.append(wordlist[i])
+            
+                res.append((wordlist[i],"ON","="))
+                mapped_node.append(wordlist[i])
             if wordlist[i] == "less":
                 res.append((wordlist[i],"ON","<"))
                 mapped_node.append(wordlist[i])
@@ -197,7 +199,49 @@ class NodeMapper:
                     item = (similarity_map[i][0],"VN", similarity_map[i][0])
                     similarity_result[i] = item
                     
-        return similarity_result + keyword_map_result
+        fix_order = NodeMapper.preserve_orginal_order_mapping(sentence,similarity_result + keyword_map_result)
+                    
+        return fix_order
+    
+    
+    
+    def preserve_orginal_order_mapping(sentence,final_map_result):
+        
+        
+        orginal_order_index = []
+        sentence_split = sentence.split(" ")
+        orginal_order_map = [0 for x in range(len(sentence_split))]
+        for i in range(len(final_map_result)):
+            orginal_order_index.append(sentence_split.index(final_map_result[i][0]))
+
+        for i in range(len(final_map_result)):
+             orginal_order_map[orginal_order_index[i]] = final_map_result[i]
+        
+        final_result = [x for x in orginal_order_map if x !=0]
+    
+        return final_result 
+    
+    
+    
+    def preserve_orginal_order_mapping2(sentence,final_map_result):
+        orginal_order_index = []
+        sentence_split = sentence.split(" ")
+        orginal_order_map = [0 for x in range(len(sentence_split))]
+        for i in range(len(final_map_result)):
+            orginal_order_index.append(sentence_split.index(final_map_result[i][0]))
+
+        for i in range(len(final_map_result)):
+             orginal_order_map[orginal_order_index[i]] = final_map_result[i]
+        
+        for i in range(len(sentence_split)):
+            if  orginal_order_map[i] == 0:
+                orginal_order_map[i] = (sentence_split[i],None,None)
+        
+        return orginal_order_map
+        
+    
+    
+    
         
         
         
@@ -212,12 +256,16 @@ if __name__ == "__main__":
     sentence = "get the authors whose name equal to BOB or age is greater than 38"
     
     sentence2 = "Get authors whose name equal to BOB and published in database area"
-    sentence = "Get the age of author whose name is equal to BOB and gender equals to male" 
+    
+    
+    
+    sentence4 ="Get the average age of author whose gender equals to male"
   #  s1 = 'get the authors whose name equal to BOB or age is greater than 38'
  #   print("input sentence: ", sentence2)
-    print("map results: ", NodeMapper.get_final_map("Get the age of author whose name is equal to BOB and gender equals to male"))
-    
-    
+    print("map results: ", NodeMapper.get_final_map(sentence))
+    b = NodeMapper.get_final_map(sentence)
+    d = NodeMapper.display_mapping(sentence)
+    print(d)
     
     
     
